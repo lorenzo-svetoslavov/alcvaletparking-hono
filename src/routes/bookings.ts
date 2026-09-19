@@ -109,6 +109,7 @@ bookings.post('/', async (c) => {
             cliente_id: data.clienteId || null, // Importante: Este ID debe existir en auth.users o tu tabla de users
             // precio: totalPrice,
             precio: data.precio, // Por ahora dejamos que venga del frontend
+            suplemento: data.suplemento || 0,
 
             ...clienteData
         };

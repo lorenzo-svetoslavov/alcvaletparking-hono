@@ -11,11 +11,11 @@ export async function calculateParkingPrice(
     fechaSalida: string | undefined | null,
     tipoPlaza: string | undefined | null,
     supabase: SupabaseClient
-): Promise<{ totalPrice: number }> {
+): Promise<{ totalPrice: number; suplemento: number }> {
 
     // Si falta algún dato, devolvemos 0 inmediatamente
     if (!fechaEntrada || !fechaSalida || !tipoPlaza) {
-        return { totalPrice: 0 };
+        return { totalPrice: 0, suplemento: 0 };
     }
 
     // Crear fechas (al no tener hora, JS asume UTC 00:00:00)
@@ -50,7 +50,25 @@ export async function calculateParkingPrice(
     const match = (tariffTable as TariffTier[]).find((tier) => days >= tier.threshold);
 
     // Si no encuentra rango, usamos el precio del último registro (el más bajo)
-    const totalPrice = match ? match.price : tariffTable[tariffTable.length - 1].price;
+    let totalPrice = match ? match.price : tariffTable[tariffTable.length - 1].price;
 
-    return { totalPrice };
+    // Suplemento fin de semana: viernes -> domingo
+    let suplemento = 0;
+    const dayEntrada = start.getUTCDay();
+    const daySalida = end.getUTCDay();
+
+    if (dayEntrada === 5 && daySalida === 0) {
+        const { data: config } = await supabase
+            .from('configuracion')
+            .select('valor')
+            .eq('clave', 'suplemento_finde')
+            .single();
+
+        if (config && config.valor > 0) {
+            suplemento = config.valor;
+            totalPrice += suplemento;
+        }
+    }
+
+    return { totalPrice, suplemento };
 }

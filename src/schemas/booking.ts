@@ -32,5 +32,8 @@ export const createBookingSchema = z.object({
     // Datos fiscales/dirección
     cif: z.string().min(1).optional(),
     nombreConductor: z.string().min(1).optional(),
-    direccion: z.string().min(1).optional()
+    direccion: z.string().min(1).optional(),
+
+    // Suplemento fin de semana
+    suplemento: z.number().min(0).optional().default(0)
 });
